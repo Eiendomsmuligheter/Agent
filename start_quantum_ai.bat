@@ -16,40 +16,45 @@ if errorlevel 1 (
     exit /b 1
 )
 
-:: Check if pip is installed
-pip --version > nul 2>&1
-if errorlevel 1 (
-    echo Installing pip...
-    python -m ensurepip --default-pip
+:: Remove existing virtual environment if it exists
+if exist "venv" (
+    echo Removing old virtual environment...
+    rmdir /s /q "venv"
 )
 
-:: Check if virtualenv is installed
-pip show virtualenv > nul 2>&1
-if errorlevel 1 (
-    echo Installing virtualenv...
-    pip install virtualenv
-)
+:: Create new virtual environment
+echo Creating fresh virtual environment...
+python -m venv venv
 
-:: Create and activate virtual environment
-echo Setting up virtual environment...
-if not exist "venv" (
-    python -m venv venv
-)
+:: Activate virtual environment
 call venv\Scripts\activate.bat
 
-:: Upgrade pip in virtual environment
-python -m pip install --upgrade pip
+:: Clean pip and upgrade
+echo Upgrading pip...
+python -m pip install --upgrade pip --no-cache-dir
 
-:: Install requirements
+:: Install core requirements one by one
 echo Installing required packages...
-pip install -r requirements.txt
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+pip install transformers --no-deps
+pip install numpy
+pip install scipy
+pip install qiskit
+pip install fastapi
+pip install uvicorn
+pip install python-multipart
+pip install websockets
+pip install redis
+pip install pyyaml
+pip install python-dotenv
+pip install aiohttp
+pip install zmq
+pip install loguru
 
-:: Install additional system dependencies
-echo Installing additional dependencies...
-pip install jupyter notebook ipykernel
-
-:: Register virtual environment with Jupyter
-python -m ipykernel install --user --name=ai_agent_venv --display-name="AI Agent Environment"
+:: Create necessary directories if they don't exist
+if not exist "data" mkdir data
+if not exist "models" mkdir models
+if not exist "logs" mkdir logs
 
 echo.
 echo Installation complete!
@@ -67,5 +72,3 @@ if errorlevel 1 (
     echo Please check the logs in the logs directory for more information.
     pause
 )
-
-deactivate
